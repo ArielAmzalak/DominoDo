@@ -197,7 +197,7 @@ st.divider()
 # ---------------------------
 # Histórico ÚNICO (parte inferior)
 # ---------------------------
-st.subheader("Histórico da partida (único)")
+st.subheader("Histórico da partida")
 if len(st.session_state.hist_all) == 0:
     st.info("Sem ações registradas ainda.")
 else:
