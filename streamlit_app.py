@@ -100,7 +100,7 @@ def zerar():
 # ---------------------------
 # UI — Título
 # ---------------------------
-st.title("Placar do Jogo)")
+st.title("Placar do Jogo")
 
 # ---------------------------
 # Painéis dos times
