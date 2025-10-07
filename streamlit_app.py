@@ -18,7 +18,7 @@ from datetime import datetime
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Placar Dominó — Mobile", layout="wide")
+st.set_page_config(page_title="Placar Do Dominó", layout="wide")
 
 # ---------------------------
 # Estilo (CSS) para mobile
@@ -34,7 +34,7 @@ st.markdown(
       }
       /* Placar grande */
       .placar {
-        font-size: 64px;
+        font-size: 60px;
         font-weight: 800;
         line-height: 1;
         margin: 0.25rem 0 0.5rem 0;
@@ -100,7 +100,7 @@ def zerar():
 # ---------------------------
 # UI — Título
 # ---------------------------
-st.title("Placar de Dominó — Duplas (Mobile)")
+st.title("Placar do Jogo)")
 
 # ---------------------------
 # Painéis dos times
