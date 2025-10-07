@@ -37,9 +37,9 @@ large_buttons = st.toggle("🔡 Botões grandes", value=True, help="Aumenta o ta
 # ---------------------------
 # Estilo (CSS) baseado no toggle
 # ---------------------------
-btn_pad = "16px 18px" if large_buttons else "12px 14px"
+btn_pad = "24px" if large_buttons else "12px"
 btn_font = "20px" if large_buttons else "14px"
-score_font = "64px" if large_buttons else "54px"
+score_font = "70px" if large_buttons else "54px"
 
 st.markdown(
     f"""
