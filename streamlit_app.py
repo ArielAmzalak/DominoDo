@@ -28,8 +28,8 @@ st.markdown(
     <style>
       /* Aumenta área de toque dos botões */
       .stButton>button {
-        padding: 16px 18px;
-        font-size: 20px;
+        padding: 12px 14px;
+        font-size: 14px;
         border-radius: 12px;
       }
       /* Placar grande */
@@ -50,7 +50,7 @@ st.markdown(
       .center-block .stButton:last-child button {
         background: #b00020 !important;
         color: #fff !important;
-        border: none !important;
+        border: #fff !important;
       }
       /* Títulos e textos */
       .team-title { text-align:center; margin-bottom: 0.25rem; }
@@ -110,7 +110,7 @@ left, right = st.columns(2)
 def painel_time(team: str, col):
     with col:
         # Título + placar
-        st.markdown(f"### <div class='team-title'>{st.session_state.team_names[team]}</div>", unsafe_allow_html=True)
+        # st.markdown(f"### <div class='team-title'>{st.session_state.team_names[team]}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='placar'>{st.session_state.totais[team]}</div>", unsafe_allow_html=True)
 
         # Nomes dos times (logo abaixo do placar)
@@ -134,7 +134,7 @@ def painel_time(team: str, col):
         # Botão único de subtração -5 (último filho -> recebe estilo vermelho)
         st.button("➖ 5", key=f"sub_{team}_5", on_click=subtrair5, help="Subtrair 5 pontos", use_container_width=True)
 
-        st.markdown("<div class='subtle'>Toque para somar, ou ajustar com ➖ 5</div>", unsafe_allow_html=True)
+        # st.markdown("<div class='subtle'>Toque para somar, ou ajustar com ➖ 5</div>", unsafe_allow_html=True)
 
 painel_time("A", left)
 painel_time("B", right)
