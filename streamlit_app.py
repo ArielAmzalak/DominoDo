@@ -1,6 +1,6 @@
 # app_simple_mobile.py
 # ===============================================
-# Dominó Duplas — Versão Simplificada (Mobile‑first) c/ Subtração -5 (corrigido)
+# Dominó Duplas — Versão Simplificada (Mobile‑first) c/ Subtração -5 (corrigido + modo empilhado)
 # -----------------------------------------------
 # Instruções:
 # 1) pip install -r requirements.txt
@@ -13,6 +13,7 @@
 # - Botão "Zerar placares" logo abaixo dos painéis
 # - Históricos por time na parte inferior (expansores)
 # - Correções: callback do ➖ 5 com args=(team,) e blindagem de estado
+# - NOVO: Toggle "Modo placar único (empilhado)" para exibir os times em uma única coluna (mobile)
 # ===============================================
 
 from datetime import datetime
@@ -57,6 +58,8 @@ st.markdown(
       .team-title { text-align:center; margin-bottom: 0.25rem; }
       .subtle { opacity: .75; text-align:center; }
       .names-row input { text-align: center; }
+      /* Separador visual entre painéis no modo empilhado */
+      .panel-sep { height: 8px; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -110,51 +113,59 @@ def zerar():
     st.session_state.hist = {"A": [], "B": []}
 
 # ---------------------------
-# UI — Título
+# UI — Título + Toggle
 # ---------------------------
 st.title("Placar do Jogo")
+stack_mode = st.toggle("📱 Modo placar único (empilhado)", help="Exibe os dois times em uma única coluna (ideal para celular).")
 
 # ---------------------------
 # Painéis dos times
 # ---------------------------
-left, right = st.columns(2)
+def painel_time(team: str):
+    # Placar
+    st.markdown(f"<div class='placar'>{st.session_state.totais[team]}</div>", unsafe_allow_html=True)
 
-def painel_time(team: str, col):
-    with col:
-        # Placar
-        st.markdown(f"<div class='placar'>{st.session_state.totais[team]}</div>", unsafe_allow_html=True)
+    # Nome do time logo abaixo do placar
+    name = st.text_input(
+        f"Nome do {team}",
+        value=st.session_state.team_names[team],
+        key=f"name_{team}",
+        help="Edite o nome do time",
+        label_visibility="collapsed"
+    )
+    st.session_state.team_names[team] = name.strip() or (f"Time {team}")
 
-        # Nome do time logo abaixo do placar
-        name = st.text_input(
-            f"Nome do {team}",
-            value=st.session_state.team_names[team],
-            key=f"name_{team}",
-            help="Edite o nome do time",
-            label_visibility="collapsed"
-        )
-        st.session_state.team_names[team] = name.strip() or (f"Time {team}")
+    # Botões centralizados: ➕ 5/10/15/20 e ➖ 5 (último)
+    st.markdown("<div class='center-block'>", unsafe_allow_html=True)
+    r1c1, r1c2 = st.columns(2)
+    r2c1, r2c2 = st.columns(2)
+    with r1c1:
+        st.button("➕ 5", key=f"add_{team}_5", on_click=somar, args=(team, 5), help="Somar 5 pontos", use_container_width=True)
+    with r1c2:
+        st.button("➕ 10", key=f"add_{team}_10", on_click=somar, args=(team, 10), help="Somar 10 pontos", use_container_width=True)
+    with r2c1:
+        st.button("➕ 15", key=f"add_{team}_15", on_click=somar, args=(team, 15), help="Somar 15 pontos", use_container_width=True)
+    with r2c2:
+        st.button("➕ 20", key=f"add_{team}_20", on_click=somar, args=(team, 20), help="Somar 20 pontos", use_container_width=True)
 
-        # Botões centralizados: ➕ 5/10/15/20 e ➖ 5 (último)
-        st.markdown("<div class='center-block'>", unsafe_allow_html=True)
-        r1c1, r1c2 = st.columns(2)
-        r2c1, r2c2 = st.columns(2)
-        with r1c1:
-            st.button("➕ 5", key=f"add_{team}_5", on_click=somar, args=(team, 5), help="Somar 5 pontos", use_container_width=True)
-        with r1c2:
-            st.button("➕ 10", key=f"add_{team}_10", on_click=somar, args=(team, 10), help="Somar 10 pontos", use_container_width=True)
-        with r2c1:
-            st.button("➕ 15", key=f"add_{team}_15", on_click=somar, args=(team, 15), help="Somar 15 pontos", use_container_width=True)
-        with r2c2:
-            st.button("➕ 20", key=f"add_{team}_20", on_click=somar, args=(team, 20), help="Somar 20 pontos", use_container_width=True)
+    # Único botão de subtração -5 (agora passando args=(team,))
+    st.button("➖ 5", key=f"sub_{team}_5", on_click=subtrair5, args=(team,), help="Subtrair 5 pontos", use_container_width=True)
 
-        # Único botão de subtração -5 (agora passando args=(team,))
-        st.button("➖ 5", key=f"sub_{team}_5", on_click=subtrair5, args=(team,), help="Subtrair 5 pontos", use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-        # st.markdown("<div class='subtle'>Toque para somar, ou ajustar com ➖ 5</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-painel_time("A", left)
-painel_time("B", right)
+# Renderização conforme o modo
+if stack_mode:
+    # Uma única coluna: empilha A e B
+    painel_time("A")
+    st.markdown("<div class='panel-sep'></div>", unsafe_allow_html=True)
+    painel_time("B")
+else:
+    # Duas colunas lado a lado
+    left, right = st.columns(2)
+    with left:
+        painel_time("A")
+    with right:
+        painel_time("B")
 
 # Botão global para reset imediatamente abaixo dos painéis
 st.markdown("")
@@ -166,19 +177,33 @@ st.divider()
 # Históricos (parte inferior)
 # ---------------------------
 st.subheader("Históricos")
-ha, hb = st.columns(2)
-with ha:
+if stack_mode:
+    # Históricos empilhados também para consistência
     with st.expander(f"📜 Histórico — {st.session_state.team_names['A']}", expanded=False):
         if len(st.session_state.hist["A"]) == 0:
             st.info("Sem ações registradas ainda.")
         else:
             dfA = pd.DataFrame(st.session_state.hist["A"])
             st.dataframe(dfA, use_container_width=True, hide_index=True)
-
-with hb:
     with st.expander(f"📜 Histórico — {st.session_state.team_names['B']}", expanded=False):
         if len(st.session_state.hist["B"]) == 0:
             st.info("Sem ações registradas ainda.")
         else:
             dfB = pd.DataFrame(st.session_state.hist["B"])
             st.dataframe(dfB, use_container_width=True, hide_index=True)
+else:
+    ha, hb = st.columns(2)
+    with ha:
+        with st.expander(f"📜 Histórico — {st.session_state.team_names['A']}", expanded=False):
+            if len(st.session_state.hist["A"]) == 0:
+                st.info("Sem ações registradas ainda.")
+            else:
+                dfA = pd.DataFrame(st.session_state.hist["A"])
+                st.dataframe(dfA, use_container_width=True, hide_index=True)
+    with hb:
+        with st.expander(f"📜 Histórico — {st.session_state.team_names['B']}", expanded=False):
+            if len(st.session_state.hist["B"]) == 0:
+                st.info("Sem ações registradas ainda.")
+            else:
+                dfB = pd.DataFrame(st.session_state.hist["B"])
+                st.dataframe(dfB, use_container_width=True, hide_index=True)
