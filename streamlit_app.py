@@ -156,20 +156,22 @@ left, right = st.columns(2)
 
 def painel_time(team: str, col):
     with col:
-        st.markdown(f"<div class='placar {size_class}'>{st.session_state.totais[team]}</div>", unsafe_allow_html=True)
-
-        # Nome do time logo abaixo do placar
         name = st.text_input(
-            f"Nome do {team}",
-            value=st.session_state.team_names[team],
-            key=f"name_{team}",
-            help="Edite o nome do time",
-            label_visibility="collapsed"
+        f"Nome do {team}",
+        value=st.session_state.team_names[team],
+        key=f"name_{team}",
+        help="Edite o nome do time",
+        label_visibility="collapsed"
+            
         )
         st.session_state.team_names[team] = name.strip() or (f"Time {team}")
 
         # Bloco central com wrapper que aplica as regras de tamanho
         st.markdown(f"<div class='center-block btn-block {size_class}'>", unsafe_allow_html=True)
+        st.markdown(f"<div class='placar {size_class}'>{st.session_state.totais[team]}</div>", unsafe_allow_html=True)
+
+        # Nome do time logo abaixo do placar
+
         r1c1, r1c2 = st.columns(2)
         r2c1, r2c2 = st.columns(2)
         with r1c1:
