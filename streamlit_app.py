@@ -11,7 +11,7 @@
 # - Nomes dos times logo abaixo do placar
 # - Botão "Zerar placares" logo abaixo dos painéis
 # - Históricos por time na parte inferior (expansores)
-# - NOVO: Toggle "🔡 Botões grandes" para aumentar área de toque/visual no celular
+# - Toggle "🔡 Botões grandes" que agora usa CSS com wrapper e !important para garantir o efeito nos botões
 # ===============================================
 
 from datetime import datetime
@@ -32,42 +32,61 @@ init_state()
 # ---------------------------
 # UI – Preferências
 # ---------------------------
-large_buttons = st.toggle("🔡 Botões grandes", value=True, help="Aumenta o tamanho dos botões e do placar para facilitar o uso no celular.")
+large_buttons = st.toggle(
+    "🔡 Botões grandes",
+    value=True,
+    help="Aumenta o tamanho dos botões e do placar para facilitar o uso no celular."
+)
+
+# Define uma classe de tamanho para encapsular os botões
+size_class = "big" if large_buttons else "small"
 
 # ---------------------------
-# Estilo (CSS) baseado no toggle
+# Estilo (CSS) baseado no toggle — com seletor mais forte e !important
 # ---------------------------
-btn_pad = "24px" if large_buttons else "12px"
-btn_font = "20px" if large_buttons else "14px"
-score_font = "70px" if large_buttons else "54px"
-
 st.markdown(
     f"""
     <style>
-      .stButton>button {{
-        padding: {btn_pad};
-        font-size: {btn_font};
-        border-radius: 12px;
+      /* Wrapper que controla o tamanho dos botões */
+      .btn-block.big .stButton > button {{
+        padding: 18px 22px !important;
+        font-size: 22px !important;
+        min-height: 56px !important;
+        border-radius: 14px !important;
       }}
-      .placar {{
-        font-size: {score_font};
+      .btn-block.small .stButton > button {{
+        padding: 12px 14px !important;
+        font-size: 14px !important;
+        min-height: 40px !important;
+        border-radius: 12px !important;
+      }}
+      /* Placar */
+      .placar.big {{
+        font-size: 72px !important;
         font-weight: 800;
         line-height: 1;
         margin: 0.25rem 0 0.5rem 0;
         text-align: center;
       }}
+      .placar.small {{
+        font-size: 54px !important;
+        font-weight: 800;
+        line-height: 1;
+        margin: 0.25rem 0 0.5rem 0;
+        text-align: center;
+      }}
+      /* Centraliza blocos internos (botões) */
       .center-block {{
         max-width: 420px;
         margin-left: auto;
         margin-right: auto;
       }}
+      /* Deixa o ÚLTIMO botão do bloco vermelho (é o ➖ 5) */
       .center-block .stButton:last-child button {{
         background: #b00020 !important;
         color: #fff !important;
         border: #fff !important;
       }}
-      .team-title {{ text-align:center; margin-bottom: 0.25rem; }}
-      .subtle {{ opacity: .75; text-align:center; }}
       .names-row input {{ text-align: center; }}
     </style>
     """,
@@ -78,7 +97,6 @@ st.markdown(
 # Lógica
 # ---------------------------
 def registrar(team: str, delta: int):
-    # Blindagem extra
     if "hist" not in st.session_state or team not in st.session_state.hist:
         init_state()
     st.session_state.hist[team].append({
@@ -113,13 +131,14 @@ def zerar():
 st.title("Placar do Jogo")
 
 # ---------------------------
-# Painéis dos times (layout 2 colunas)
+# Painéis dos times (2 colunas)
 # ---------------------------
 left, right = st.columns(2)
 
 def painel_time(team: str, col):
     with col:
-        st.markdown(f"<div class='placar'>{st.session_state.totais[team]}</div>", unsafe_allow_html=True)
+        # Placar com classe de tamanho
+        st.markdown(f"<div class='placar {size_class}'>{st.session_state.totais[team]}</div>", unsafe_allow_html=True)
 
         # Nome do time logo abaixo do placar
         name = st.text_input(
@@ -131,8 +150,8 @@ def painel_time(team: str, col):
         )
         st.session_state.team_names[team] = name.strip() or (f"Time {team}")
 
-        # Botões centralizados: ➕ 5/10/15/20 e ➖ 5 (último)
-        st.markdown("<div class='center-block'>", unsafe_allow_html=True)
+        # Bloco central com wrapper que aplica as regras de tamanho
+        st.markdown(f"<div class='center-block btn-block {size_class}'>", unsafe_allow_html=True)
         r1c1, r1c2 = st.columns(2)
         r2c1, r2c2 = st.columns(2)
         with r1c1:
@@ -143,7 +162,6 @@ def painel_time(team: str, col):
             st.button("➕ 15", key=f"add_{team}_15", on_click=somar, args=(team, 15), help="Somar 15 pontos", use_container_width=True)
         with r2c2:
             st.button("➕ 20", key=f"add_{team}_20", on_click=somar, args=(team, 20), help="Somar 20 pontos", use_container_width=True)
-
         st.button("➖ 5", key=f"sub_{team}_5", on_click=subtrair5, args=(team,), help="Subtrair 5 pontos", use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
