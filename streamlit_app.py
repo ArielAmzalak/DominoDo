@@ -10,8 +10,8 @@
 # - Botões centralizados (➕ 5/10/15/20) e um único ➖ 5 no final (vermelho)
 # - Nomes dos times logo abaixo do placar
 # - Botão "Zerar placares" logo abaixo dos painéis
-# - Históricos por time na parte inferior (expansores)
-# - Toggle "🔡 Botões grandes" que agora usa CSS com wrapper e !important para garantir o efeito nos botões
+# - Histórico ÚNICO da partida (ambos os times)
+# - Toggle "🔡 Botões grandes" com CSS forte para mobile
 # ===============================================
 
 from datetime import datetime
@@ -26,7 +26,11 @@ st.set_page_config(page_title="Placar Do Dominó", layout="wide")
 def init_state():
     st.session_state.setdefault("team_names", {"A": "Time A", "B": "Time B"})
     st.session_state.setdefault("totais", {"A": 0, "B": 0})
-    st.session_state.setdefault("hist", {"A": [], "B": []})  # lista de dicts: {ts, delta, total}
+    # Históricos individuais ainda existem, mas não são mais exibidos.
+    st.session_state.setdefault("hist", {"A": [], "B": []})
+    # Histórico único da partida
+    st.session_state.setdefault("hist_all", [])  # lista de dicts: {timestamp, time_id, time, delta, total_resultante}
+
 init_state()
 
 # ---------------------------
@@ -38,7 +42,7 @@ large_buttons = st.toggle(
     help="Aumenta o tamanho dos botões e do placar para facilitar o uso no celular."
 )
 
-# Define uma classe de tamanho para encapsular os botões
+# Wrapper de tamanho (aplica CSS aos botões e placar)
 size_class = "big" if large_buttons else "small"
 
 # ---------------------------
@@ -97,10 +101,24 @@ st.markdown(
 # Lógica
 # ---------------------------
 def registrar(team: str, delta: int):
+    """Registra a ação no histórico individual e no histórico único da partida."""
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # Blindagem
     if "hist" not in st.session_state or team not in st.session_state.hist:
         init_state()
+
+    # Atualiza histórico por time (mantido para compatibilidade)
     st.session_state.hist[team].append({
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": ts,
+        "delta": f"{'+' if delta>0 else ''}{delta}",
+        "total_resultante": st.session_state.totais[team],
+    })
+
+    # Atualiza histórico único
+    st.session_state.hist_all.append({
+        "timestamp": ts,
+        "time_id": team,
+        "time": st.session_state.team_names[team],
         "delta": f"{'+' if delta>0 else ''}{delta}",
         "total_resultante": st.session_state.totais[team],
     })
@@ -124,6 +142,7 @@ def subtrair5(team: str):
 def zerar():
     st.session_state.totais = {"A": 0, "B": 0}
     st.session_state.hist = {"A": [], "B": []}
+    st.session_state.hist_all = []
 
 # ---------------------------
 # UI — Título
@@ -137,7 +156,6 @@ left, right = st.columns(2)
 
 def painel_time(team: str, col):
     with col:
-        # Placar com classe de tamanho
         st.markdown(f"<div class='placar {size_class}'>{st.session_state.totais[team]}</div>", unsafe_allow_html=True)
 
         # Nome do time logo abaixo do placar
@@ -175,22 +193,16 @@ st.button("🧹 Zerar placares", on_click=zerar, help="Zera os placares e histó
 st.divider()
 
 # ---------------------------
-# Históricos (parte inferior)
+# Histórico ÚNICO (parte inferior)
 # ---------------------------
-st.subheader("Históricos")
-ha, hb = st.columns(2)
-with ha:
-    with st.expander(f"📜 Histórico — {st.session_state.team_names['A']}", expanded=False):
-        if len(st.session_state.hist["A"]) == 0:
-            st.info("Sem ações registradas ainda.")
-        else:
-            dfA = pd.DataFrame(st.session_state.hist["A"])
-            st.dataframe(dfA, use_container_width=True, hide_index=True)
-
-with hb:
-    with st.expander(f"📜 Histórico — {st.session_state.team_names['B']}", expanded=False):
-        if len(st.session_state.hist["B"]) == 0:
-            st.info("Sem ações registradas ainda.")
-        else:
-            dfB = pd.DataFrame(st.session_state.hist["B"])
-            st.dataframe(dfB, use_container_width=True, hide_index=True)
+st.subheader("Histórico da partida (único)")
+if len(st.session_state.hist_all) == 0:
+    st.info("Sem ações registradas ainda.")
+else:
+    df_all = pd.DataFrame(st.session_state.hist_all)
+    # Ordena por timestamp (caso futuro com imports/edições)
+    # E mostra as colunas em ordem amigável
+    cols = ["timestamp", "time", "delta", "total_resultante"]
+    cols = [c for c in cols if c in df_all.columns]
+    df_show = df_all[cols].copy()
+    st.dataframe(df_show, use_container_width=True, hide_index=True)
